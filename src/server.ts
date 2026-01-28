@@ -4,10 +4,10 @@
  * @module server
  */
 
-import app from './app';
-import { config } from './config';
-import { logger } from './utils/logger';
-import { startScheduledRefresh, stopScheduledRefresh } from './services/tclService';
+import app from './app.js';
+import { config } from './config/index.js';
+import { logger } from './utils/logger.js';
+import { startScheduledRefresh, stopScheduledRefresh } from './services/tclService.js';
 
 const PORT = config.server.port;
 

@@ -5,9 +5,9 @@
  */
 
 import axios, { AxiosError } from 'axios';
-import { config } from '../config';
-import { logger } from '../utils/logger';
-import { CachedTrafficData, GrandLyonApiResponse, TrafficAlertRaw } from '../models/trafficAlert';
+import { config } from '../config/index.js';
+import { logger } from '../utils/logger.js';
+import { CachedTrafficData, GrandLyonApiResponse, TrafficAlertRaw } from '../models/trafficAlert.js';
 
 /**
  * Cached traffic data storage

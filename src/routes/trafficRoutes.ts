@@ -5,7 +5,7 @@
  */
 
 import { Router } from 'express';
-import { getAllAlerts, getStatus } from '../controllers/trafficController';
+import { getAllAlerts, getStatus } from '../controllers/trafficController.js';
 
 const router = Router();
 

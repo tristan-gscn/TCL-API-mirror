@@ -5,9 +5,9 @@
  */
 
 import { Request, Response } from 'express';
-import { getCachedData, getCachedDataSync } from '../services/tclService';
-import { ApiResponse, TrafficAlertRaw } from '../models/trafficAlert';
-import { logger } from '../utils/logger';
+import { getCachedData, getCachedDataSync } from '../services/tclService.js';
+import { ApiResponse, TrafficAlertRaw } from '../models/trafficAlert.js';
+import { logger } from '../utils/logger.js';
 
 /**
  * Builds a standardized API response

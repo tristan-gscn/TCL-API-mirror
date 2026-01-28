@@ -4,7 +4,7 @@
  */
 
 import express, { Request, Response } from 'express';
-import trafficRoutes from './routes/trafficRoutes';
+import trafficRoutes from './routes/trafficRoutes.js';
 
 const app = express();
 
