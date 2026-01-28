@@ -1,6 +1,6 @@
 /**
  * @fileoverview Express routes for traffic alert endpoints.
- * Defines the RESTful API routes for accessing traffic data.
+ * Defines the REST-ful API routes for accessing traffic data.
  * @module routes/trafficRoutes
  */
 

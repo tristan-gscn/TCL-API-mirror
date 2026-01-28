@@ -75,8 +75,3 @@ export const getStatus = (req: Request, res: Response): void => {
     );
     res.json(response);
 };
-
-export default {
-    getAllAlerts,
-    getStatus,
-};

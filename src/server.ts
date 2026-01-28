@@ -47,4 +47,4 @@ process.on('SIGTERM', gracefulShutdown);
 process.on('SIGINT', gracefulShutdown);
 
 // Start the server
-startServer();
+startServer().then(() => {});

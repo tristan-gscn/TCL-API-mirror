@@ -144,21 +144,3 @@ export const stopScheduledRefresh = (): void => {
         logger.info('Scheduled refresh stopped');
     }
 };
-
-/**
- * Forces a manual refresh of the cached data
- * @returns Promise resolving to the updated cached data
- */
-export const forceRefresh = async (): Promise<CachedTrafficData> => {
-    logger.info('Forcing manual data refresh...');
-    return updateCachedData();
-};
-
-export default {
-    fetchTrafficAlerts,
-    getCachedData,
-    getCachedDataSync,
-    startScheduledRefresh,
-    stopScheduledRefresh,
-    forceRefresh,
-};
