@@ -21,11 +21,12 @@ const startServer = async (): Promise<void> => {
 
         // Start the Express server
         app.listen(PORT, () => {
-            logger.info(`Server is running on http://localhost:${PORT}`);
+            logger.success(`Server started on http://localhost:${PORT}`);
             logger.info('Available endpoints:');
-            logger.info('  GET  /health - Health check');
-            logger.info('  GET  /traffic/alerts - Get all traffic alerts');
-            logger.info('  GET  /traffic/status - Get cache status');
+            logger.info('  🩺 GET  /health - Health check');
+            logger.info('  🚨 GET  /traffic/alerts - Get all traffic alerts');
+            logger.info('  📊 GET  /traffic/status - Get cache status');
+            logger.info(`Current log level: ${logger.getLogLevel()}`);
         });
     } catch (error) {
         logger.error('Failed to start server', error as Error);
@@ -37,8 +38,9 @@ const startServer = async (): Promise<void> => {
  * Graceful shutdown handler
  */
 const gracefulShutdown = (): void => {
-    logger.info('Shutting down gracefully...');
+    logger.warn('Shutting down gracefully...');
     stopScheduledRefresh();
+    logger.success('Server stopped cleanly');
     process.exit(0);
 };
 

@@ -39,7 +39,7 @@ const getAuthHeader = (): string => {
  * @throws Error if the API request fails
  */
 export const fetchTrafficAlerts = async (): Promise<TrafficAlertRaw[]> => {
-    logger.info('Fetching traffic alerts from GrandLyon API...');
+    logger.debug('🌐 Fetching traffic alerts from GrandLyon API...');
 
     try {
         const response = await axios.get<GrandLyonApiResponse>(config.api.baseUrl, {
@@ -51,7 +51,7 @@ export const fetchTrafficAlerts = async (): Promise<TrafficAlertRaw[]> => {
         });
 
         const alerts = response.data.values || [];
-        logger.info(`Successfully fetched ${alerts.length} traffic alerts`);
+        logger.info(`✅ Successfully fetched ${alerts.length} traffic alerts`);
         return alerts;
     } catch (error) {
         const axiosError = error as AxiosError;
@@ -59,7 +59,7 @@ export const fetchTrafficAlerts = async (): Promise<TrafficAlertRaw[]> => {
             ? `API responded with status ${axiosError.response.status}`
             : axiosError.message;
 
-        logger.error(`Failed to fetch traffic alerts: ${errorMessage}`, error as Error);
+        logger.error(`❌ Failed to fetch traffic alerts: ${errorMessage}`, error as Error);
         throw new Error(`Failed to fetch traffic alerts: ${errorMessage}`);
     }
 };
@@ -77,10 +77,10 @@ export const updateCachedData = async (): Promise<CachedTrafficData> => {
             lastUpdated: now,
             count: alerts.length,
         };
-        logger.info(`Cache updated with ${alerts.length} alerts at ${now.toISOString()}`);
+        logger.debug(`🔄 Cache updated with ${alerts.length} alerts at ${now.toLocaleString('en-US')}`);
         return cachedData;
     } catch (error) {
-        logger.error('Failed to update cached data', error as Error);
+        logger.error('❌ Failed to update cached data', error as Error);
         throw error;
     }
 };
@@ -92,7 +92,7 @@ export const updateCachedData = async (): Promise<CachedTrafficData> => {
  */
 export const getCachedData = async (): Promise<CachedTrafficData> => {
     if (cachedData.alerts.length === 0 || cachedData.lastUpdated === null) {
-        logger.info('Cache is empty, fetching initial data...');
+        logger.info('💾 Cache is empty, fetching initial data...');
         await updateCachedData();
     }
     return cachedData;
@@ -111,14 +111,15 @@ export const getCachedDataSync = (): CachedTrafficData => {
  * Fetches data immediately if cache is empty, then refreshes hourly
  */
 export const startScheduledRefresh = async (): Promise<void> => {
-    logger.info('Starting scheduled data refresh...');
+    logger.info('⏰ Starting scheduled data refresh...');
 
     // Fetch immediately if cache is empty
     if (cachedData.alerts.length === 0 || cachedData.lastUpdated === null) {
         try {
             await updateCachedData();
         } catch (error) {
-            logger.error('Initial data fetch failed, will retry on next interval', error as Error);
+            logger.warn('⚠️  Initial data fetch failed, will retry on next interval');
+            logger.debug(`Initial fetch error details: ${(error as Error).message}`);
         }
     }
 
@@ -127,11 +128,11 @@ export const startScheduledRefresh = async (): Promise<void> => {
         try {
             await updateCachedData();
         } catch (error) {
-            logger.error('Scheduled data refresh failed', error as Error);
+            logger.error('❌ Scheduled data refresh failed', error as Error);
         }
     }, config.api.refreshInterval);
 
-    logger.info(`Scheduled refresh set for every ${config.api.refreshInterval / 1000 / 60} minutes`);
+    logger.success(`⏱️  Scheduled refresh set for every ${config.api.refreshInterval / 1000 / 60} minutes`);
 };
 
 /**
@@ -141,6 +142,6 @@ export const stopScheduledRefresh = (): void => {
     if (refreshInterval) {
         clearInterval(refreshInterval);
         refreshInterval = null;
-        logger.info('Scheduled refresh stopped');
+        logger.info('⏹️  Scheduled refresh stopped');
     }
 };
