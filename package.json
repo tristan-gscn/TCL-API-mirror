@@ -1,12 +1,15 @@
 {
   "name": "tcl-api-mirror",
   "version": "1.0.0",
+  "type": "module",
   "description": "Mirror for real-time data of the Lyon TCL network",
   "main": "index.js",
   "scripts": {
     "start": "node dist/server.js",
     "dev": "ts-node-dev src/server.ts",
     "build": "tsc",
+    "lint": "eslint src/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts --fix",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -26,9 +29,14 @@
   },
   "homepage": "https://github.com/tristan-gscn/TCL-API-mirror#readme",
   "devDependencies": {
+    "@eslint/js": "^9.39.2",
     "@types/axios": "^0.9.36",
     "@types/express": "^5.0.6",
     "@types/node": "^25.0.10",
+    "@typescript-eslint/eslint-plugin": "^8.54.0",
+    "@typescript-eslint/parser": "^8.54.0",
+    "eslint": "^9.39.2",
+    "eslint-config-prettier": "^10.1.8",
     "nodemon": "^3.1.11",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",

@@ -5,14 +5,16 @@
  */
 
 /**
- * Log levels enumeration
+ * Log levels constants
  */
-enum LogLevel {
-    INFO = 'INFO',
-    WARN = 'WARN',
-    ERROR = 'ERROR',
-    DEBUG = 'DEBUG',
-}
+const LOG_LEVELS = {
+    INFO: 'INFO',
+    WARN: 'WARN', 
+    ERROR: 'ERROR',
+    DEBUG: 'DEBUG',
+} as const;
+
+type LogLevel = typeof LOG_LEVELS[keyof typeof LOG_LEVELS];
 
 /**
  * Formats a log message with timestamp and level
@@ -34,7 +36,7 @@ export const logger = {
      * @param message - The message to log
      */
     info: (message: string): void => {
-        console.log(formatMessage(LogLevel.INFO, message));
+        console.log(formatMessage(LOG_LEVELS.INFO, message));
     },
 
     /**
@@ -42,7 +44,7 @@ export const logger = {
      * @param message - The message to log
      */
     warn: (message: string): void => {
-        console.warn(formatMessage(LogLevel.WARN, message));
+        console.warn(formatMessage(LOG_LEVELS.WARN, message));
     },
 
     /**
@@ -51,7 +53,7 @@ export const logger = {
      * @param error - Optional error object for additional context
      */
     error: (message: string, error?: Error): void => {
-        console.error(formatMessage(LogLevel.ERROR, message));
+        console.error(formatMessage(LOG_LEVELS.ERROR, message));
         if (error) {
             console.error(error.stack || error.message);
         }
@@ -63,7 +65,7 @@ export const logger = {
      */
     debug: (message: string): void => {
         if (process.env.NODE_ENV !== 'production') {
-            console.debug(formatMessage(LogLevel.DEBUG, message));
+            console.debug(formatMessage(LOG_LEVELS.DEBUG, message));
         }
     },
 };
