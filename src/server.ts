@@ -8,6 +8,10 @@ import app from './app.js';
 import { config } from './config/index.js';
 import { logger } from './utils/logger.js';
 import { startScheduledRefresh, stopScheduledRefresh } from './services/tclService.js';
+import {
+    startVehicleMonitoringRefresh,
+    stopVehicleMonitoringRefresh,
+} from './services/vehicleMonitoringService.js';
 
 const PORT = config.server.port;
 
@@ -18,6 +22,7 @@ const startServer = async (): Promise<void> => {
     try {
         // Start the scheduled data refresh (fetches immediately if cache is empty)
         await startScheduledRefresh();
+        await startVehicleMonitoringRefresh();
 
         // Start the Express server
         app.listen(PORT, () => {
@@ -26,6 +31,8 @@ const startServer = async (): Promise<void> => {
             logger.info('  🩺 GET  /health - Health check');
             logger.info('  🚨 GET  /traffic/alerts - Get all traffic alerts');
             logger.info('  📊 GET  /traffic/status - Get cache status');
+            logger.info('  🚌 GET  /vehicle-monitoring/positions - Get vehicle positions');
+            logger.info('  📈 GET  /vehicle-monitoring/status - Get vehicle cache status');
             logger.info(`Current log level: ${logger.getLogLevel()}`);
         });
     } catch (error) {
@@ -40,6 +47,7 @@ const startServer = async (): Promise<void> => {
 const gracefulShutdown = (): void => {
     logger.warn('Shutting down gracefully...');
     stopScheduledRefresh();
+    stopVehicleMonitoringRefresh();
     logger.success('Server stopped cleanly');
     process.exit(0);
 };

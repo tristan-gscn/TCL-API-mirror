@@ -4,7 +4,7 @@ A simple API mirror for real-time data of the Lyon TCL (public transport) networ
 
 ## What is this?
 
-This is a Node.js/TypeScript API that provides access to Lyon's public transportation data (TCL/Sytral network). It serves as a mirror for real-time traffic information and alerts.
+This is a Node.js/TypeScript API that provides access to Lyon's public transportation data (TCL/Sytral network). It serves as a mirror for real-time traffic information and vehicle positions.
 
 ## Getting Started
 
@@ -39,7 +39,8 @@ npm start
 Once running, the API will be available at `http://localhost:3000`
 
 - Health check: `GET /health`
-- API endpoints: Check `/traffic` for traffic-related data
+- Traffic endpoints: `GET /traffic/alerts`, `GET /traffic/status`
+- Vehicle monitoring endpoints: `GET /vehicle-monitoring/positions`, `GET /vehicle-monitoring/status`
 
 ## License
 

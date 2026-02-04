@@ -38,7 +38,13 @@ export const config = {
         baseUrl: 'https://data.grandlyon.com/fr/datapusher/ws/rdata/tcl_sytral.tclalertetrafic_2/all.json?start=1&filename=alertes-trafic-reseau-transports-commun-lyonnais-v2',
         email: process.env.EMAIL || '',
         password: process.env.PASSWORD || '',
-        refreshInterval: 60 * 60 * 1000, // 1 hour in milliseconds
+        refreshInterval: 10 * 60 * 1000, // 10 minutes in milliseconds
+    } as ApiConfig,
+    vehicleMonitoring: {
+        baseUrl: 'https://data.grandlyon.com/siri-lite/2.0/vehicle-monitoring.json',
+        email: process.env.EMAIL || '',
+        password: process.env.PASSWORD || '',
+        refreshInterval: 10 * 1000, // 10 seconds in milliseconds
     } as ApiConfig,
     server: {
         port: parseInt(process.env.PORT || '3000', 10),
