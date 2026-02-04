@@ -23,6 +23,14 @@ export interface ApiConfig {
 }
 
 /**
+ * Traffic API configuration interface
+ */
+export interface TrafficApiConfig extends ApiConfig {
+    /** Base URL for Junior Direct (school lines) traffic alerts */
+    juniorDirectBaseUrl: string;
+}
+
+/**
  * Server configuration interface
  */
 export interface ServerConfig {
@@ -34,12 +42,14 @@ export interface ServerConfig {
  * Application configuration object
  */
 export const config = {
-    api: {
+    traffic: {
         baseUrl: 'https://data.grandlyon.com/fr/datapusher/ws/rdata/tcl_sytral.tclalertetrafic_2/all.json?start=1&filename=alertes-trafic-reseau-transports-commun-lyonnais-v2',
+        juniorDirectBaseUrl:
+            'https://data.grandlyon.com/fr/datapusher/ws/rdata/jd_juniordirect.jdalertetrafic_2/all.json?maxfeatures=-1&start=1&filename=alertes-trafic-lignes-scolaires-reseau-transports-commun-lyonnais',
         email: process.env.EMAIL || '',
         password: process.env.PASSWORD || '',
-        refreshInterval: 10 * 60 * 1000, // 10 minutes in milliseconds
-    } as ApiConfig,
+        refreshInterval: 5 * 60 * 1000, // 5 minutes in milliseconds
+    } as TrafficApiConfig,
     vehicleMonitoring: {
         baseUrl: 'https://data.grandlyon.com/siri-lite/2.0/vehicle-monitoring.json',
         email: process.env.EMAIL || '',

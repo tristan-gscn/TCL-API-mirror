@@ -29,7 +29,7 @@ let refreshInterval: NodeJS.Timeout | null = null;
  * @returns Base64 encoded credentials string
  */
 const getAuthHeader = (): string => {
-    const credentials = `${config.api.email}:${config.api.password}`;
+    const credentials = `${config.traffic.email}:${config.traffic.password}`;
     return `Basic ${Buffer.from(credentials).toString('base64')}`;
 };
 
@@ -42,16 +42,39 @@ export const fetchTrafficAlerts = async (): Promise<TrafficAlertRaw[]> => {
     logger.debug('🌐 Fetching traffic alerts from GrandLyon API...');
 
     try {
-        const response = await axios.get<GrandLyonApiResponse>(config.api.baseUrl, {
-            headers: {
-                Authorization: getAuthHeader(),
-                'Content-Type': 'application/json',
-            },
-            timeout: 30000, // 30 seconds timeout
-        });
+        const [mainResult, juniorResult] = await Promise.allSettled([
+            axios.get<GrandLyonApiResponse>(config.traffic.baseUrl, {
+                headers: {
+                    Authorization: getAuthHeader(),
+                    'Content-Type': 'application/json',
+                },
+                timeout: 30000, // 30 seconds timeout
+            }),
+            axios.get<GrandLyonApiResponse>(config.traffic.juniorDirectBaseUrl, {
+                headers: {
+                    Authorization: getAuthHeader(),
+                    'Content-Type': 'application/json',
+                },
+                timeout: 30000, // 30 seconds timeout
+            }),
+        ]);
 
-        const alerts = response.data.values || [];
-        logger.info(`✅ Successfully fetched ${alerts.length} traffic alerts`);
+        if (mainResult.status === 'rejected') {
+            throw mainResult.reason;
+        }
+
+        const mainAlerts = mainResult.value.data.values || [];
+        const juniorAlerts =
+            juniorResult.status === 'fulfilled' ? juniorResult.value.data.values || [] : [];
+
+        if (juniorResult.status === 'rejected') {
+            logger.warn('⚠️  Failed to fetch Junior Direct traffic alerts, serving main data only');
+        }
+
+        const alerts = [...mainAlerts, ...juniorAlerts];
+        logger.info(
+            `✅ Successfully fetched ${alerts.length} traffic alerts (${juniorAlerts.length} Junior Direct)`
+        );
         return alerts;
     } catch (error) {
         const axiosError = error as AxiosError;
@@ -130,9 +153,11 @@ export const startScheduledRefresh = async (): Promise<void> => {
         } catch (error) {
             logger.error('❌ Scheduled data refresh failed', error as Error);
         }
-    }, config.api.refreshInterval);
+    }, config.traffic.refreshInterval);
 
-    logger.success(`⏱️  Scheduled refresh set for every ${config.api.refreshInterval / 1000 / 60} minutes`);
+    logger.success(
+        `⏱️  Scheduled refresh set for every ${config.traffic.refreshInterval / 1000 / 60} minutes`
+    );
 };
 
 /**
