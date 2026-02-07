@@ -34,6 +34,37 @@ const getAuthHeader = (): string => {
 };
 
 /**
+ * Removes duplicate alerts from the array
+ * Uses key fields (message, titre, ligne_cli, cause, type) to identify duplicates
+ * Ignores technical fields like 'n', 'debut', 'fin' which may vary for the same alert
+ * @param alerts - Array of traffic alerts (may contain duplicates)
+ * @returns Array of unique traffic alerts
+ */
+const deduplicateAlerts = (alerts: TrafficAlertRaw[]): TrafficAlertRaw[] => {
+    const seen = new Set<string>();
+    const uniqueAlerts: TrafficAlertRaw[] = [];
+
+    for (const alert of alerts) {
+        // Create a key based on fields that matter to users
+        const key = JSON.stringify({
+            message: alert.message,
+            titre: alert.titre,
+            ligne_cli: alert.ligne_cli,
+            cause: alert.cause,
+            type: alert.type,
+            mode: alert.mode,
+        });
+        
+        if (!seen.has(key)) {
+            seen.add(key);
+            uniqueAlerts.push(alert);
+        }
+    }
+
+    return uniqueAlerts;
+};
+
+/**
  * Fetches traffic alert data from the GrandLyon API
  * @returns Promise resolving to array of traffic alerts
  * @throws Error if the API request fails
@@ -71,9 +102,16 @@ export const fetchTrafficAlerts = async (): Promise<TrafficAlertRaw[]> => {
             logger.warn('⚠️  Failed to fetch Junior Direct traffic alerts, serving main data only');
         }
 
-        const alerts = [...mainAlerts, ...juniorAlerts];
+        const allAlerts = [...mainAlerts, ...juniorAlerts];
+        const alerts = deduplicateAlerts(allAlerts);
+        
+        const duplicatesRemoved = allAlerts.length - alerts.length;
+        if (duplicatesRemoved > 0) {
+            logger.info(`🔄 Removed ${duplicatesRemoved} duplicate alert(s)`);
+        }
+        
         logger.info(
-            `✅ Successfully fetched ${alerts.length} traffic alerts (${juniorAlerts.length} Junior Direct)`
+            `✅ Successfully fetched ${alerts.length} unique traffic alerts (${juniorAlerts.length} Junior Direct, ${duplicatesRemoved} duplicates removed)`
         );
         return alerts;
     } catch (error) {
