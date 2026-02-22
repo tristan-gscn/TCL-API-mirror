@@ -8,6 +8,8 @@ import axios, { AxiosError } from 'axios';
 import { config } from '../config/index.js';
 import { logger } from '../utils/logger.js';
 import { CachedTrafficData, GrandLyonApiResponse, TrafficAlertRaw } from '../models/trafficAlert.js';
+import { getAlertKey, getLineKey } from '../utils/trafficAlertKey.js';
+import { notifyNewTrafficAlerts } from './trafficSocketService.js';
 
 /**
  * Cached traffic data storage
@@ -23,6 +25,7 @@ let cachedData: CachedTrafficData = {
  * Interval reference for the scheduled data refresh
  */
 let refreshInterval: NodeJS.Timeout | null = null;
+let fakeAlertCounter = 0;
 
 /**
  * Creates Basic Auth header from email and password
@@ -45,15 +48,8 @@ const deduplicateAlerts = (alerts: TrafficAlertRaw[]): TrafficAlertRaw[] => {
     const uniqueAlerts: TrafficAlertRaw[] = [];
 
     for (const alert of alerts) {
-        // Create a key based on fields that matter to users
-        const key = JSON.stringify({
-            message: alert.message,
-            titre: alert.titre,
-            ligne_cli: alert.ligne_cli,
-            cause: alert.cause,
-            type: alert.type,
-            mode: alert.mode,
-        });
+        // Create a stable key based on fields that matter to users
+        const key = getAlertKey(alert);
         
         if (!seen.has(key)) {
             seen.add(key);
@@ -62,6 +58,82 @@ const deduplicateAlerts = (alerts: TrafficAlertRaw[]): TrafficAlertRaw[] => {
     }
 
     return uniqueAlerts;
+};
+
+const applyFakeTrafficAlert = (alerts: TrafficAlertRaw[]): TrafficAlertRaw[] => {
+    if (process.env.TRAFFIC_FAKE_ALERT !== '1') {
+        return alerts;
+    }
+
+    const line = (process.env.TRAFFIC_FAKE_LINE || 'A').trim() || 'A';
+    fakeAlertCounter += 1;
+
+    const fakeAlert: TrafficAlertRaw = {
+        titre: 'Test alert (fake)',
+        message: `Fake traffic alert #${fakeAlertCounter}`,
+        ligne_cli: line,
+        cause: 'test',
+        type: 'test',
+        mode: 'test',
+        debut: new Date().toISOString(),
+    };
+
+    logger.warn(`⚠️  Injecting fake traffic alert for line ${line}`);
+    return [...alerts, fakeAlert];
+};
+
+/**
+ * Indexes alerts by line to speed up diffing between refreshes
+ * @param alerts - Array of traffic alerts
+ * @returns Map of line -> Set of alert keys
+ */
+const indexAlertsByLine = (alerts: TrafficAlertRaw[]): Map<string, Set<string>> => {
+    const index = new Map<string, Set<string>>();
+
+    for (const alert of alerts) {
+        const lineKey = getLineKey(alert);
+        if (!lineKey) {
+            continue;
+        }
+
+        const alertKey = getAlertKey(alert);
+        const existing = index.get(lineKey);
+        if (existing) {
+            existing.add(alertKey);
+        } else {
+            index.set(lineKey, new Set([alertKey]));
+        }
+    }
+
+    return index;
+};
+
+/**
+ * Detects new alerts compared to the previous index
+ * @param alerts - Latest alerts
+ * @param previousIndex - Map of line -> Set of alert keys from previous refresh
+ * @returns Array of alerts that are new for their line
+ */
+const detectNewAlerts = (
+    alerts: TrafficAlertRaw[],
+    previousIndex: Map<string, Set<string>>
+): TrafficAlertRaw[] => {
+    const newAlerts: TrafficAlertRaw[] = [];
+
+    for (const alert of alerts) {
+        const lineKey = getLineKey(alert);
+        if (!lineKey) {
+            continue;
+        }
+
+        const alertKey = getAlertKey(alert);
+        const previousKeys = previousIndex.get(lineKey);
+        if (!previousKeys || !previousKeys.has(alertKey)) {
+            newAlerts.push(alert);
+        }
+    }
+
+    return newAlerts;
 };
 
 /**
@@ -103,7 +175,7 @@ export const fetchTrafficAlerts = async (): Promise<TrafficAlertRaw[]> => {
         }
 
         const allAlerts = [...mainAlerts, ...juniorAlerts];
-        const alerts = deduplicateAlerts(allAlerts);
+        const alerts = applyFakeTrafficAlert(deduplicateAlerts(allAlerts));
         
         const duplicatesRemoved = allAlerts.length - alerts.length;
         if (duplicatesRemoved > 0) {
@@ -131,6 +203,10 @@ export const fetchTrafficAlerts = async (): Promise<TrafficAlertRaw[]> => {
  */
 export const updateCachedData = async (): Promise<CachedTrafficData> => {
     try {
+        const previousAlerts = cachedData.alerts;
+        const hadPrevious = previousAlerts.length > 0;
+        const previousIndex = hadPrevious ? indexAlertsByLine(previousAlerts) : null;
+
         const alerts = await fetchTrafficAlerts();
         const now = new Date();
         cachedData = {
@@ -139,6 +215,19 @@ export const updateCachedData = async (): Promise<CachedTrafficData> => {
             count: alerts.length,
         };
         logger.debug(`🔄 Cache updated with ${alerts.length} alerts at ${now.toLocaleString('en-US')}`);
+
+        if (hadPrevious && previousIndex) {
+            const newAlerts = detectNewAlerts(alerts, previousIndex);
+            if (newAlerts.length > 0) {
+                try {
+                    notifyNewTrafficAlerts(newAlerts);
+                } catch (error) {
+                    logger.warn('⚠️  Failed to notify traffic alert subscribers');
+                    logger.debug(`Notification error details: ${(error as Error).message}`);
+                }
+            }
+        }
+
         return cachedData;
     } catch (error) {
         logger.error('❌ Failed to update cached data', error as Error);

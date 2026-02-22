@@ -4,6 +4,7 @@
  * @module server
  */
 
+import http from 'http';
 import app from './app.js';
 import { config } from './config/index.js';
 import { logger } from './utils/logger.js';
@@ -12,8 +13,10 @@ import {
     startVehicleMonitoringRefresh,
     stopVehicleMonitoringRefresh,
 } from './services/vehicleMonitoringService.js';
+import { initTrafficSocketServer, stopTrafficSocketServer } from './services/trafficSocketService.js';
 
 const PORT = config.server.port;
+let httpServer: http.Server | null = null;
 
 /**
  * Starts the server and initializes scheduled tasks
@@ -24,8 +27,11 @@ const startServer = async (): Promise<void> => {
         await startScheduledRefresh();
         await startVehicleMonitoringRefresh();
 
-        // Start the Express server
-        app.listen(PORT, () => {
+        // Start the HTTP server and WebSocket service
+        httpServer = http.createServer(app);
+        initTrafficSocketServer(httpServer);
+
+        httpServer.listen(PORT, () => {
             logger.success(`Server started on http://localhost:${PORT}`);
             logger.info('Available endpoints:');
             logger.info('  🩺 GET  /health - Health check');
@@ -33,6 +39,7 @@ const startServer = async (): Promise<void> => {
             logger.info('  📊 GET  /traffic/status - Get cache status');
             logger.info('  🚌 GET  /vehicle-monitoring/positions - Get vehicle positions');
             logger.info('  📈 GET  /vehicle-monitoring/status - Get vehicle cache status');
+            logger.info('  🔌 WS  /traffic/alerts/ws - Subscribe to traffic alert updates');
             logger.info(`Current log level: ${logger.getLogLevel()}`);
         });
     } catch (error) {
@@ -48,6 +55,14 @@ const gracefulShutdown = (): void => {
     logger.warn('Shutting down gracefully...');
     stopScheduledRefresh();
     stopVehicleMonitoringRefresh();
+    stopTrafficSocketServer();
+    if (httpServer) {
+        httpServer.close(() => {
+            logger.success('Server stopped cleanly');
+            process.exit(0);
+        });
+        return;
+    }
     logger.success('Server stopped cleanly');
     process.exit(0);
 };

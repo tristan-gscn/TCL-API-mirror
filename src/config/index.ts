@@ -48,7 +48,7 @@ export const config = {
             'https://data.grandlyon.com/fr/datapusher/ws/rdata/jd_juniordirect.jdalertetrafic_2/all.json?maxfeatures=-1&start=1&filename=alertes-trafic-lignes-scolaires-reseau-transports-commun-lyonnais',
         email: process.env.EMAIL || '',
         password: process.env.PASSWORD || '',
-        refreshInterval: 5 * 60 * 1000, // 5 minutes in milliseconds
+        refreshInterval: parseInt(process.env.TRAFFIC_REFRESH_INTERVAL_MS || '300000', 10), // 5 minutes in milliseconds
     } as TrafficApiConfig,
     vehicleMonitoring: {
         baseUrl: 'https://data.grandlyon.com/siri-lite/2.0/vehicle-monitoring.json',
