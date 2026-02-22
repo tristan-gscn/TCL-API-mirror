@@ -42,6 +42,37 @@ Once running, the API will be available at `http://localhost:3000`
 - Traffic endpoints: `GET /traffic/alerts`, `GET /traffic/status`
 - Vehicle monitoring endpoints: `GET /vehicle-monitoring/positions`, `GET /vehicle-monitoring/status`
 
+## Realtime Streaming
+
+### Traffic Alerts WebSocket
+
+Endpoint: `localhost:3000/traffic/alerts/ws`
+
+Client sends:
+```json
+{ "type": "subscribe", "lines": ["A", "B"] }
+```
+
+Server sends:
+```json
+{ "type": "welcome", "maxFavorites": 50 }
+{ "type": "subscribed", "lines": ["A", "B"], "maxFavorites": 50, "truncated": false }
+{ "type": "alert", "line": "A", "key": "...", "timestamp": "...", "alert": { ... } }
+```
+
+### Vehicle Positions SSE
+
+Endpoint: `GET /vehicle-monitoring/positions/stream`
+
+The server pushes updates as soon as fresh data is fetched. Events:
+```
+event: positions
+data: {"count":123,"lastUpdated":"...","payload":{...}}
+
+event: heartbeat
+data: {}
+```
+
 ## License
 
 See LICENSE.pdf
