@@ -13,6 +13,7 @@ import {
     startVehicleMonitoringRefresh,
     stopVehicleMonitoringRefresh,
 } from './services/vehicleMonitoringService.js';
+import { stopVehicleMonitoringStream } from './services/vehicleMonitoringStreamService.js';
 import { initTrafficSocketServer, stopTrafficSocketServer } from './services/trafficSocketService.js';
 
 const PORT = config.server.port;
@@ -38,6 +39,7 @@ const startServer = async (): Promise<void> => {
             logger.info('  🚨 GET  /traffic/alerts - Get all traffic alerts');
             logger.info('  📊 GET  /traffic/status - Get cache status');
             logger.info('  🚌 GET  /vehicle-monitoring/positions - Get vehicle positions');
+            logger.info('  📡 GET  /vehicle-monitoring/positions/stream - Stream vehicle positions');
             logger.info('  📈 GET  /vehicle-monitoring/status - Get vehicle cache status');
             logger.info('  🔌 WS  /traffic/alerts/ws - Subscribe to traffic alert updates');
             logger.info(`Current log level: ${logger.getLogLevel()}`);
@@ -55,6 +57,7 @@ const gracefulShutdown = (): void => {
     logger.warn('Shutting down gracefully...');
     stopScheduledRefresh();
     stopVehicleMonitoringRefresh();
+    stopVehicleMonitoringStream();
     stopTrafficSocketServer();
     if (httpServer) {
         httpServer.close(() => {

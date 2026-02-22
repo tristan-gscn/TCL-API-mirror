@@ -8,6 +8,7 @@ import { Router } from 'express';
 import {
     getVehicleMonitoring,
     getVehicleMonitoringStatus,
+    streamVehicleMonitoring,
 } from '../controllers/vehicleMonitoringController.js';
 
 const router = Router();
@@ -18,6 +19,12 @@ const router = Router();
  * @returns {ApiResponse<VehicleMonitoringApiResponse>} JSON response with vehicle data
  */
 router.get('/positions', getVehicleMonitoring);
+
+/**
+ * @route GET /vehicle-monitoring/positions/stream
+ * @description Streams vehicle monitoring payload updates (SSE)
+ */
+router.get('/positions/stream', streamVehicleMonitoring);
 
 /**
  * @route GET /vehicle-monitoring/status

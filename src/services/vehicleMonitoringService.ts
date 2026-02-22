@@ -12,6 +12,7 @@ import {
     VehicleMonitoringApiResponse,
     VehicleMonitoringDelivery,
 } from '../models/vehicleMonitoring.js';
+import { sendVehicleMonitoringUpdate } from './vehicleMonitoringStreamService.js';
 
 /**
  * Cached vehicle monitoring data storage
@@ -110,6 +111,7 @@ export const updateCachedVehicleMonitoringData = async (): Promise<CachedVehicle
         logger.debug(
             `🔄 Vehicle monitoring cache updated with ${count} vehicles at ${now.toLocaleString('en-US')}`
         );
+        sendVehicleMonitoringUpdate(cachedData);
         return cachedData;
     } catch (error) {
         logger.error('❌ Failed to update vehicle monitoring cached data', error as Error);

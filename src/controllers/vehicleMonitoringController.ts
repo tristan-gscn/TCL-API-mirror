@@ -9,6 +9,7 @@ import {
     getVehicleMonitoringData,
     getVehicleMonitoringDataSync,
 } from '../services/vehicleMonitoringService.js';
+import { registerVehicleMonitoringStream } from '../services/vehicleMonitoringStreamService.js';
 import { ApiResponse } from '../models/apiResponse.js';
 import { VehicleMonitoringApiResponse } from '../models/vehicleMonitoring.js';
 import { logger } from '../utils/logger.js';
@@ -78,4 +79,14 @@ export const getVehicleMonitoringStatus = (req: Request, res: Response): void =>
         cachedData.lastUpdated
     );
     res.json(response);
+};
+
+/**
+ * Handles SSE stream for vehicle monitoring updates
+ * @param req - Express request object
+ * @param res - Express response object
+ */
+export const streamVehicleMonitoring = (req: Request, res: Response): void => {
+    const cachedData = getVehicleMonitoringDataSync();
+    registerVehicleMonitoringStream(res, cachedData.payload ? cachedData : null);
 };
